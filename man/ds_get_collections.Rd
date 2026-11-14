@@ -10,8 +10,9 @@ ds_get_collections(con)
 \item{con}{A connection from \code{\link[=ds_connect]{ds_connect()}}.}
 }
 \value{
-A tibble with repository URL, collection UUID, handle, name, a
-lossless metadata list column and retrieval timestamp.
+A tibble with \code{repository}, \code{collection_uuid}, \code{handle}, \code{name},
+\code{metadata} (a lossless list column) and \code{retrieved_at}. Its \code{dspacer}
+attribute records repository/package versions, selection and retrieval bounds.
 }
 \description{
 Retrieve collections visible to the current account

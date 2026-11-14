@@ -16,8 +16,17 @@
 #' @param items An item tibble from [ds_get_items()].
 #' @param bundles Bundle names to include. Defaults to `"ORIGINAL"`; `NULL`
 #'   includes all visible bundles. This does not bypass bundle access controls.
-#' @return One row per item--bundle--bitstream association. Includes file
-#'   metadata, MIME type, checksum, size and primary-file status.
+#' @return One row per item--bundle--bitstream association, with:
+#'   * `repository`, `item_uuid`, `bundle_uuid`, `bundle_name`, `bitstream_uuid`:
+#'     association identifiers.
+#'   * `name`, `mime_type`, `size_bytes`, `checksum_algorithm`, `checksum`:
+#'     file properties; names need not be unique.
+#'   * `is_primary`: primary-file status, or `NA` if it cannot be determined.
+#'   * `metadata`: lossless file-level metadata, distinct from item metadata.
+#'   * `content_url`, `retrieved_at`: canonical API content link and timestamp.
+#'
+#'   The `dspacer` attribute records repository/package versions, selection and
+#'   retrieval bounds. A bitstream can have multiple bundle associations.
 #' @export
 ds_get_files <- function(con, items, bundles = "ORIGINAL") {
   .ds_check_connection(con)
@@ -103,6 +112,17 @@ ds_get_files <- function(con, items, bundles = "ORIGINAL") {
 #' Existing files are verified against a fresh authorized download and are never
 #' silently overwritten. Content is currently buffered in memory, so this first
 #' implementation is not intended for very large attachments.
+#'
+#' @details
+#' Downloaded bytes must match the inventory's size and advertised MD5, SHA-1,
+#' SHA-256 or SHA-512 checksum. Missing/unsupported checksums or mismatches are
+#' errors; refresh the inventory if the repository file may have changed.
+#' SHA-256 is also computed independently for the local manifest.
+#'
+#' Local paths use repository and bitstream identifiers, not remote filenames.
+#' Transfers are serial. There is no resume engine or persistent content cache.
+#' Existing local bytes are not treated as evidence of current authorization.
+#' Secure restricted downloads and do not commit them or credentials.
 #'
 #' @param con A connection from [ds_connect()].
 #' @param files Selected rows from [ds_get_files()].

@@ -30,8 +30,9 @@
 #' Retrieve collections visible to the current account
 #'
 #' @param con A connection from [ds_connect()].
-#' @return A tibble with repository URL, collection UUID, handle, name, a
-#'   lossless metadata list column and retrieval timestamp.
+#' @return A tibble with `repository`, `collection_uuid`, `handle`, `name`,
+#'   `metadata` (a lossless list column) and `retrieved_at`. Its `dspacer`
+#'   attribute records repository/package versions, selection and retrieval bounds.
 #' @export
 ds_get_collections <- function(con) {
   .ds_check_connection(con)
@@ -53,14 +54,24 @@ ds_get_collections <- function(con) {
 #' Search results are not an atomic repository snapshot and depend on the
 #' repository's search index. Explicit UUID retrieval does not use that index.
 #'
+#' @details
+#' Uses Discovery rather than the administrator-only `/core/items` list endpoint.
+#' Detected count changes or duplicate UUIDs stop retrieval; retry after the
+#' repository is stable. Search retrieval is not a database audit or a guarantee
+#' of a transactionally consistent snapshot.
+#'
 #' @param con A connection from [ds_connect()].
 #' @param scope Optional collection or community UUID.
 #' @param query Optional Discovery query, interpreted by the repository.
 #' @param ids Optional character vector of item UUIDs, instead of `scope`/`query`.
 #'   Explicit UUIDs may retrieve non-archived items if the account can read them.
-#' @return An item tibble with a lossless `metadata` list column. Search excludes
-#'   withdrawn and non-archived items. No arguments retrieves all visible search
-#'   results, not items owned by the account.
+#' @return An item tibble with `repository`, `item_uuid`, `handle`, `name`,
+#'   `last_modified`, `in_archive`, `withdrawn`, `metadata` (a lossless list column)
+#'   and `retrieved_at`. Search excludes withdrawn and non-archived items. No
+#'   arguments retrieves all visible search results, not items owned by the
+#'   account. Its `dspacer` attribute records repository/package versions, the
+#'   selection and retrieval start/end times. Use repository URL and item UUID
+#'   as join keys, not titles or handles.
 #' @export
 ds_get_items <- function(con, scope = NULL, query = NULL, ids = NULL) {
   .ds_check_connection(con)
@@ -112,6 +123,14 @@ ds_get_items <- function(con, scope = NULL, query = NULL, ids = NULL) {
 #' This is a local transformation, not a network request. Repeated values,
 #' languages, authorities, confidence, server ordering and unknown properties
 #' are retained. Date values remain strings.
+#'
+#' @details
+#' Custom fields and repeated values are not deduplicated, collapsed or reduced
+#' to the first value. Years, uncertain dates and non-Gregorian dates are not
+#' silently converted. Empty strings and missing values remain distinct.
+#'
+#' Item and file metadata describe different objects. For file tables,
+#' `object_uuid` identifies the bitstream, not the parent item.
 #'
 #' @param x An item, collection or file tibble returned by dspacer.
 #' @return One row per metadata value, with `repository`, `object_uuid`,

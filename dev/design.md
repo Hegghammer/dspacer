@@ -1,7 +1,8 @@
 # An R client for DSpace
 
-Original design draft, 2026-11-14. Implementation has started locally; see
-`README.md` for current behaviour. Nothing has been published to GitHub.
+Original design draft, 2026-11-14, retained as development background.
+See [the README](../README.md), [vignettes](../vignettes/) and function help for
+current behaviour; repository-state statements below describe initial creation.
 
 Working name: `dspacer`. Name availability has not been checked.
 

@@ -8,12 +8,24 @@ Verified locally on 2026-11-14 with R 4.5.3 on Debian GNU/Linux 13.
 - `R CMD check --no-manual`: **0 errors, 0 warnings, 0 notes**.
 - Installed-package tests: **118 passing assertions**, no failures, warnings or
   skipped assertions.
-- The authentication vignette built, installed and rebuilt successfully; its
-  examples are not evaluated and require no credentials.
+- All three vignettes (authentication, metadata and text/files) built, installed
+  and rebuilt successfully; their examples are not evaluated and require no
+  credentials.
 - Full check output is in
-  `/tmp/opencode/dspacer_check_vignette/dspacer.Rcheck/`.
+  `/tmp/opencode/dspacer_check_documentation_final/dspacer.Rcheck/`.
 - The local documentation tool emitted a pre-existing libxml build/runtime
   version message; it did not produce a package-check warning or note.
+
+## Documentation organisation
+
+- README reduced to 46 lines: overview, installation, a short example,
+  documentation links and licence.
+- Specialist guidance lives in vignettes and generated function help.
+- Design, verification and development notes live under `dev/`, excluded from
+  package builds. No `CONTRIBUTING.md` was created.
+- Checked local documentation links and parsed all vignette R examples.
+- Parsed R expressions were compared with Git HEAD: function definitions are
+  unchanged by the documentation edits.
 
 ## Package metadata
 
@@ -61,5 +73,6 @@ dependencies.
 - Ordinary-reader access, independent deployments, other DSpace versions, SSO,
   external content stores and other operating systems need evaluation.
 - GitHub Actions configuration has been written but has not run on GitHub.
-- The local Git repository uses branch `main`, with no commits or remotes.
-  Nothing has been created or published on GitHub.
+- At initial package creation, the local Git repository used branch `main`,
+  with no commits or remotes; nothing had been published to GitHub. This is a
+  historical record, not a statement of current remote state.

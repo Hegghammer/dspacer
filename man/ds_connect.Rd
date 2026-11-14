@@ -23,3 +23,18 @@ An opaque \code{dspacer_connection}, printed without authentication details.
 Creates an anonymous connection and checks the API root. Connections contain
 sensitive session state: do not serialize them or include them in datasets.
 }
+\details{
+Supports the modern DSpace REST API, not the legacy DSpace 6 API. Only reads
+and authentication operations are issued; repository content is not changed.
+
+HTTPS is required unless \code{allow_insecure = TRUE} is deliberately supplied for
+development or loopback use. API links and redirects outside the configured
+origin and API path are refused, including external storage download URLs.
+
+Session cookies are kept in a private temporary file, removed on disconnect
+or when the connection is garbage-collected. No persistent text cache is
+created. Downloaded restricted documents are still sensitive local copies.
+
+Progress messages are printed per item or file and survive redirected output.
+Use \code{quiet = TRUE} to suppress them.
+}

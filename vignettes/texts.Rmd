@@ -1,0 +1,85 @@
+---
+title: "Working with text and files"
+output: rmarkdown::html_vignette
+vignette: |
+  %\VignetteIndexEntry{Working with text and files}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Inventory attachments
+
+Connect to a repository and choose items. For restricted content, log in first
+as described in the authentication vignette.
+
+```{r inventory, eval=FALSE}
+library(dspacer)
+library(dplyr)
+
+con <- ds_connect("https://repository.example.org/server/api")
+items <- ds_get_items(con, query = "history")
+files <- ds_get_files(con, items)
+files
+```
+
+The inventory contains one row per item–bundle–bitstream association, including
+filename, MIME type, size, checksum and primary-file status. It does not download
+the file content.
+
+The default bundle is `ORIGINAL`. To inventory all visible bundles instead:
+
+```{r bundles, eval=FALSE}
+all_files <- ds_get_files(con, items, bundles = NULL)
+```
+
+## Choose and retrieve text
+
+Inspect the inventory and explicitly select the files you want. A Markdown file
+may contain provenance or documentation rather than the document's text.
+These filenames are illustrative, not package naming requirements:
+
+```{r text, eval=FALSE}
+selected <- files |>
+  filter(name %in% c("transcription.md", "translation.md"))
+
+texts <- ds_get_texts(con, selected)
+```
+
+The result contains both decoded `source_text` and analysis plaintext `text`,
+along with file identifiers, SHA-256, retrieval time and conversion information.
+File association uses UUIDs: identical filenames on different items are not
+treated as the same attachment.
+
+Markdown and UTF-8 plaintext are supported. The package does not perform OCR,
+translation, language inference, stemming or automatic page-marker removal.
+For encoding rules and exact Markdown rendering behaviour, see `?ds_get_texts`.
+
+## Download original bytes
+
+```{r download, eval=FALSE}
+downloads <- ds_download(con, selected, "downloads")
+downloads$local_path
+```
+
+This returns a manifest with local paths and hashes. Downloads use UUID-based
+filenames and are checked against the repository's advertised size/checksum.
+Conflicting local content is not silently overwritten. See `?ds_download` for
+supported checksum algorithms and failure behaviour.
+
+Downloads are buffered in memory and retrieved serially, so avoid very large
+attachments. Restricted files remain sensitive local copies: secure their
+storage and do not commit them or credentials.
+
+## Save a dataset
+
+```{r save, eval=FALSE}
+metadata <- ds_get_metadata(items)
+saveRDS(
+  list(items = items, metadata = metadata, files = files, texts = texts),
+  "repository_dataset.rds"
+)
+ds_disconnect(con)
+```
+
+Join tables using repository URL and UUIDs, not titles or filenames. Keep the
+connection out of saved datasets because it contains sensitive session state.

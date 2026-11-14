@@ -19,3 +19,11 @@ This is a local transformation, not a network request. Repeated values,
 languages, authorities, confidence, server ordering and unknown properties
 are retained. Date values remain strings.
 }
+\details{
+Custom fields and repeated values are not deduplicated, collapsed or reduced
+to the first value. Years, uncertain dates and non-Gregorian dates are not
+silently converted. Empty strings and missing values remain distinct.
+
+Item and file metadata describe different objects. For file tables,
+\code{object_uuid} identifies the bitstream, not the parent item.
+}

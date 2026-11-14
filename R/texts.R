@@ -34,13 +34,46 @@
 #' document text. This function does not infer language, associate files by name,
 #' remove page headings, normalize Unicode, or perform OCR.
 #'
+#' @section Supported formats:
+#' Accepts `text/markdown`, `text/x-markdown` and `text/plain`. Unknown or
+#' `application/octet-stream` files can use `.md` or `.txt` as a fallback. An
+#' explicit non-text MIME type is not overridden by a filename.
+#'
+#' @section Plaintext conversion:
+#' Markdown is rendered with `commonmark`, with no line wrapping, smart
+#' punctuation, Unicode normalization or optional Markdown extensions. Headings
+#' become ordinary text, link labels remain while destinations are omitted, code
+#' text is retained, and raw HTML is omitted. Tables and footnotes receive no
+#' extension-specific interpretation. Paragraph separation follows the renderer,
+#' not a guarantee of one output paragraph per source block.
+#'
+#' `source_text` retains decoded source text, not exact source bytes. UTF-8 is
+#' required; a UTF-8 BOM is removed from decoded text but included in checksums.
+#' Invalid UTF-8 is an error, not silently replaced text. Use [ds_download()] for
+#' exact bytes.
+#'
+#' @section Integrity and errors:
+#' The size/checksum checks in [ds_download()] also apply here. An absent
+#' attachment produces no inventory row, an inaccessible attachment is an error,
+#' and a successfully downloaded empty file remains empty. No translation,
+#' stemming, language inference or automatic page-marker removal is performed.
+#'
 #' @param con A connection from [ds_connect()].
 #' @param files Selected rows from [ds_get_files()]. Text MIME types are used;
 #'   `.md`/`.txt` extensions are a fallback only for unknown/octet-stream formats.
-#' @return One row per selected file association, with decoded `source_text`,
-#'   derived plaintext `text`, identifiers, local SHA-256, retrieval time and
-#'   conversion version. Original bytes are available through [ds_download()].
-#'   UTF-8 BOMs are omitted from decoded text; malformed UTF-8 is an error.
+#' @return One row per selected file association, with:
+#'   * `repository`, `item_uuid`, `bundle_uuid`, `bundle_name`, `bitstream_uuid`:
+#'     association identifiers.
+#'   * `name`, `mime_type`: file properties.
+#'   * `source_text`, `text`: decoded source and derived plaintext.
+#'   * `sha256`, `retrieved_at`: original-byte hash and download timestamp.
+#'   * `conversion`, `conversion_version`: renderer and version, or `"none"` and
+#'     `NA` for plaintext.
+#'
+#'   Its `dspacer` attribute records repository/package versions, selection and
+#'   retrieval bounds. Join using repository URL and UUIDs, not filenames.
+#' @seealso [ds_get_files()] to inventory attachments; [ds_download()] to save
+#'   original bytes.
 #' @export
 ds_get_texts <- function(con, files) {
   .ds_check_files(con, files)

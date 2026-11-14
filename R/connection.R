@@ -3,6 +3,21 @@
 #' Creates an anonymous connection and checks the API root. Connections contain
 #' sensitive session state: do not serialize them or include them in datasets.
 #'
+#' @details
+#' Supports the modern DSpace REST API, not the legacy DSpace 6 API. Only reads
+#' and authentication operations are issued; repository content is not changed.
+#'
+#' HTTPS is required unless `allow_insecure = TRUE` is deliberately supplied for
+#' development or loopback use. API links and redirects outside the configured
+#' origin and API path are refused, including external storage download URLs.
+#'
+#' Session cookies are kept in a private temporary file, removed on disconnect
+#' or when the connection is garbage-collected. No persistent text cache is
+#' created. Downloaded restricted documents are still sensitive local copies.
+#'
+#' Progress messages are printed per item or file and survive redirected output.
+#' Use `quiet = TRUE` to suppress them.
+#'
 #' @param base_url REST API root, for example
 #'   `"https://repository.example.org/server/api"`. No default is supplied.
 #' @param allow_insecure Explicitly allow HTTP, for development or loopback use.
@@ -56,6 +71,12 @@ ds_connect <- function(base_url, allow_insecure = FALSE, timeout = 60, quiet = F
 #'
 #' Passwords are used for login only and are not retained in the connection.
 #' This implements DSpace password authentication, not browser SSO.
+#'
+#' @details
+#' The connection retains session cookies, the current CSRF token and the bearer
+#' token. An expired session may trigger one token refresh during a read, not a
+#' repeated password login. Authentication does not grant permissions beyond
+#' those already held by the account.
 #'
 #' @param con A connection from [ds_connect()].
 #' @param user Login username or email.

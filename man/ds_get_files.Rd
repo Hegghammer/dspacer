@@ -15,8 +15,19 @@ ds_get_files(con, items, bundles = "ORIGINAL")
 includes all visible bundles. This does not bypass bundle access controls.}
 }
 \value{
-One row per item--bundle--bitstream association. Includes file
-metadata, MIME type, checksum, size and primary-file status.
+One row per item--bundle--bitstream association, with:
+\itemize{
+\item \code{repository}, \code{item_uuid}, \code{bundle_uuid}, \code{bundle_name}, \code{bitstream_uuid}:
+association identifiers.
+\item \code{name}, \code{mime_type}, \code{size_bytes}, \code{checksum_algorithm}, \code{checksum}:
+file properties; names need not be unique.
+\item \code{is_primary}: primary-file status, or \code{NA} if it cannot be determined.
+\item \code{metadata}: lossless file-level metadata, distinct from item metadata.
+\item \code{content_url}, \code{retrieved_at}: canonical API content link and timestamp.
+}
+
+The \code{dspacer} attribute records repository/package versions, selection and
+retrieval bounds. A bitstream can have multiple bundle associations.
 }
 \description{
 Inventories files without downloading their content. Files are identified by

@@ -1,0 +1,79 @@
+---
+title: "Retrieving metadata"
+output: rmarkdown::html_vignette
+vignette: |
+  %\VignetteIndexEntry{Retrieving metadata}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Choose items
+
+Connect to your repository. For restricted content, follow the authentication
+vignette and log in before retrieving items.
+
+```{r connect, eval=FALSE}
+library(dspacer)
+
+con <- ds_connect("https://repository.example.org/server/api")
+collections <- ds_get_collections(con)
+collections
+```
+
+Inspect the collection table, then retrieve items from a chosen collection:
+
+```{r collection, eval=FALSE}
+collection_id <- collections$collection_uuid[[1]]
+items <- ds_get_items(con, scope = collection_id)
+```
+
+Other ways to choose items:
+
+```{r alternatives, eval=FALSE}
+# All visible archived search results, not just items owned by your account.
+items <- ds_get_items(con)
+
+# Search using your repository's Discovery query syntax.
+items <- ds_get_items(con, query = "history")
+
+# Retrieve known item UUIDs directly, without using the search index.
+known_ids <- head(items$item_uuid, 2)
+items <- ds_get_items(con, ids = known_ids)
+```
+
+Use `ids` instead of, not together with, `scope` or `query`.
+
+## Extract metadata
+
+The item table has one row per item. Its `metadata` list column preserves the
+complete metadata map, including custom fields and repeated values.
+
+```{r metadata, eval=FALSE}
+metadata <- ds_get_metadata(items)
+metadata
+```
+
+This produces one row per metadata value, retaining field names, languages,
+authorities, confidence and ordering. Nothing is silently reduced to the first
+value. Dates remain strings, including years, uncertain dates and non-Gregorian
+dates.
+
+`ds_get_metadata()` is a local transformation. It also accepts collection and
+file tables; file metadata describes the attachment, not the parent item.
+See `?ds_get_metadata` for the returned columns.
+
+## Save a dataset
+
+```{r save, eval=FALSE}
+saveRDS(list(items = items, metadata = metadata), "repository_metadata.rds")
+ds_disconnect(con)
+```
+
+Use repository URLs and UUIDs when joining datasets, not titles or filenames.
+Network result tables carry a `dspacer` attribute recording repository/package
+versions, the selection and retrieval start/end times. These records do not
+make a live repository retrieval an atomic snapshot.
+
+Search depends on the repository's index. Detected count changes or duplicate
+UUIDs stop retrieval rather than silently claiming completeness; retry once the
+repository is stable.

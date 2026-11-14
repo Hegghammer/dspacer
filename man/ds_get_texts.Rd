@@ -13,13 +13,56 @@ ds_get_texts(con, files)
 \code{.md}/\code{.txt} extensions are a fallback only for unknown/octet-stream formats.}
 }
 \value{
-One row per selected file association, with decoded \code{source_text},
-derived plaintext \code{text}, identifiers, local SHA-256, retrieval time and
-conversion version. Original bytes are available through \code{\link[=ds_download]{ds_download()}}.
-UTF-8 BOMs are omitted from decoded text; malformed UTF-8 is an error.
+One row per selected file association, with:
+\itemize{
+\item \code{repository}, \code{item_uuid}, \code{bundle_uuid}, \code{bundle_name}, \code{bitstream_uuid}:
+association identifiers.
+\item \code{name}, \code{mime_type}: file properties.
+\item \code{source_text}, \code{text}: decoded source and derived plaintext.
+\item \code{sha256}, \code{retrieved_at}: original-byte hash and download timestamp.
+\item \code{conversion}, \code{conversion_version}: renderer and version, or \code{"none"} and
+\code{NA} for plaintext.
+}
+
+Its \code{dspacer} attribute records repository/package versions, selection and
+retrieval bounds. Join using repository URL and UUIDs, not filenames.
 }
 \description{
 Selection is explicit: Markdown may describe provenance rather than contain
 document text. This function does not infer language, associate files by name,
 remove page headings, normalize Unicode, or perform OCR.
+}
+\section{Supported formats}{
+
+Accepts \code{text/markdown}, \code{text/x-markdown} and \code{text/plain}. Unknown or
+\code{application/octet-stream} files can use \code{.md} or \code{.txt} as a fallback. An
+explicit non-text MIME type is not overridden by a filename.
+}
+
+\section{Plaintext conversion}{
+
+Markdown is rendered with \code{commonmark}, with no line wrapping, smart
+punctuation, Unicode normalization or optional Markdown extensions. Headings
+become ordinary text, link labels remain while destinations are omitted, code
+text is retained, and raw HTML is omitted. Tables and footnotes receive no
+extension-specific interpretation. Paragraph separation follows the renderer,
+not a guarantee of one output paragraph per source block.
+
+\code{source_text} retains decoded source text, not exact source bytes. UTF-8 is
+required; a UTF-8 BOM is removed from decoded text but included in checksums.
+Invalid UTF-8 is an error, not silently replaced text. Use \code{\link[=ds_download]{ds_download()}} for
+exact bytes.
+}
+
+\section{Integrity and errors}{
+
+The size/checksum checks in \code{\link[=ds_download]{ds_download()}} also apply here. An absent
+attachment produces no inventory row, an inaccessible attachment is an error,
+and a successfully downloaded empty file remains empty. No translation,
+stemming, language inference or automatic page-marker removal is performed.
+}
+
+\seealso{
+\code{\link[=ds_get_files]{ds_get_files()}} to inventory attachments; \code{\link[=ds_download]{ds_download()}} to save
+original bytes.
 }

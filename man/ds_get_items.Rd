@@ -17,12 +17,22 @@ ds_get_items(con, scope = NULL, query = NULL, ids = NULL)
 Explicit UUIDs may retrieve non-archived items if the account can read them.}
 }
 \value{
-An item tibble with a lossless \code{metadata} list column. Search excludes
-withdrawn and non-archived items. No arguments retrieves all visible search
-results, not items owned by the account.
+An item tibble with \code{repository}, \code{item_uuid}, \code{handle}, \code{name},
+\code{last_modified}, \code{in_archive}, \code{withdrawn}, \code{metadata} (a lossless list column)
+and \code{retrieved_at}. Search excludes withdrawn and non-archived items. No
+arguments retrieves all visible search results, not items owned by the
+account. Its \code{dspacer} attribute records repository/package versions, the
+selection and retrieval start/end times. Use repository URL and item UUID
+as join keys, not titles or handles.
 }
 \description{
 Uses permission-aware Discovery search, not administrator-only item listing.
 Search results are not an atomic repository snapshot and depend on the
 repository's search index. Explicit UUID retrieval does not use that index.
+}
+\details{
+Uses Discovery rather than the administrator-only \verb{/core/items} list endpoint.
+Detected count changes or duplicate UUIDs stop retrieval; retry after the
+repository is stable. Search retrieval is not a database audit or a guarantee
+of a transactionally consistent snapshot.
 }

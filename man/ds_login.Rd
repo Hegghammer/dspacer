@@ -21,3 +21,9 @@ The connection, invisibly.
 Passwords are used for login only and are not retained in the connection.
 This implements DSpace password authentication, not browser SSO.
 }
+\details{
+The connection retains session cookies, the current CSRF token and the bearer
+token. An expired session may trigger one token refresh during a read, not a
+repeated password login. Authentication does not grant permissions beyond
+those already held by the account.
+}
