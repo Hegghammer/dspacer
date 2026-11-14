@@ -118,30 +118,50 @@ ds_get_items <- function(con, scope = NULL, query = NULL, ids = NULL) {
          value_index = integer(), extra = list())
 }
 
-#' Extract lossless metadata as a long table
+#' Extract metadata as a wide or long table
 #'
-#' This is a local transformation, not a network request. Repeated values,
-#' languages, authorities, confidence, server ordering and unknown properties
-#' are retained. Date values remain strings.
+#' Returns one row per object with metadata fields as columns by default.
+#' This is a local transformation, not a network request. Date values remain
+#' strings and repeated values are preserved.
 #'
 #' @details
-#' Custom fields and repeated values are not deduplicated, collapsed or reduced
-#' to the first value. Years, uncertain dates and non-Gregorian dates are not
-#' silently converted. Empty strings and missing values remain distinct.
+#' In wide format, metadata keys such as `dc.title` become column names, in
+#' first-seen order. A field is a character column if it has at most one value
+#' per object. If any object has multiple values, that field is a list-column of
+#' character vectors for every row. Values retain their received order, including
+#' duplicates; they are not collapsed into delimited strings.
+#'
+#' Missing single values are `NA_character_`; absent values in list-columns are
+#' `character()`. Empty strings remain empty. Objects with no metadata still have
+#' a row. Repeated file/bundle associations produce one row per object; conflicting
+#' metadata for the same object is an error.
+#'
+#' Wide format contains metadata values only. Use `format = "long"` for
+#' per-value language, authority, confidence, server ordering and unknown
+#' properties. The original metadata map also remains in `x$metadata`.
+#' Years, uncertain dates and non-Gregorian dates are not silently converted.
 #'
 #' Item and file metadata describe different objects. For file tables,
 #' `object_uuid` identifies the bitstream, not the parent item.
 #'
 #' @param x An item, collection or file tibble returned by dspacer.
-#' @return One row per metadata value, with `repository`, `object_uuid`,
-#'   `object_type`, `field`, `value`, `language`, `authority`, `confidence`,
-#'   `place`, `value_index` (one-based received position), and `extra`.
+#' @param format Output layout: `"wide"` (default) or `"long"`.
+#' @return A tibble retaining the input's `dspacer` attribute.
+#'   * Wide: `repository`, `object_uuid`, `object_type`, followed by one column per
+#'     observed metadata field. Objects retain their first appearance order.
+#'   * Long: one row per metadata value, with `repository`, `object_uuid`,
+#'     `object_type`, `field`, `value`, `language`, `authority`, `confidence`,
+#'     `place`, `value_index` (one-based received position), and `extra`.
 #' @export
-ds_get_metadata <- function(x) {
+ds_get_metadata <- function(x, format = c("wide", "long")) {
+  format <- match.arg(format)
   .ds_require_columns(x, c("repository", "metadata"))
   types <- c(bitstream_uuid = "bitstream", collection_uuid = "collection", item_uuid = "item")
   id_column <- intersect(names(types), names(x))[1]
   if (is.na(id_column)) .ds_abort("Expected item, collection or bitstream identifiers.", "input_error")
+  if (format == "wide") {
+    return(.ds_metadata_wide(x, id_column, unname(types[[id_column]])))
+  }
   rows <- list()
   for (i in seq_len(nrow(x))) {
     metadata <- .ds_metadata_map(x$metadata[[i]])
@@ -165,6 +185,47 @@ ds_get_metadata <- function(x) {
     }
   }
   out <- .ds_bind(rows, .ds_metadata_table())
+  attr(out, "dspacer") <- attr(x, "dspacer")
+  out
+}
+
+.ds_metadata_wide <- function(x, id_column, object_type) {
+  out <- tibble(repository = x$repository, object_uuid = x[[id_column]],
+                object_type = rep(object_type, nrow(x)))
+  metadata <- lapply(x$metadata, .ds_metadata_map)
+  duplicates <- duplicated(out)
+  for (i in which(duplicates)) {
+    first <- which(out$repository == out$repository[[i]] &
+                   out$object_uuid == out$object_uuid[[i]])[[1]]
+    if (!identical(metadata[[i]], metadata[[first]])) {
+      .ds_abort("Conflicting metadata for the same object; use a single snapshot.", "input_error")
+    }
+  }
+  out <- out[!duplicates, , drop = FALSE]
+  metadata <- metadata[!duplicates]
+  fields <- unique(unlist(lapply(metadata, names), use.names = FALSE))
+  if (any(fields %in% names(out))) {
+    .ds_abort("A metadata field conflicts with a reserved identifier column.", "input_error")
+  }
+  for (field in fields) {
+    values <- lapply(metadata, function(map) {
+      entries <- map[[field]]
+      if (!is.null(entries) && !is.list(entries)) {
+        .ds_abort("Expected metadata value arrays.", "protocol_error")
+      }
+      vapply(entries, function(entry) {
+        if (!is.list(entry)) .ds_abort("Expected metadata value objects.", "protocol_error")
+        .ds_value(entry$value)
+      }, character(1), USE.NAMES = FALSE)
+    })
+    if (any(lengths(values) > 1L)) {
+      out[[field]] <- values
+    } else {
+      out[[field]] <- vapply(values, function(value) {
+        if (length(value)) value[[1]] else NA_character_
+      }, character(1))
+    }
+  }
   attr(out, "dspacer") <- attr(x, "dspacer")
   out
 }

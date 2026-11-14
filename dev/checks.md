@@ -6,15 +6,26 @@ Verified locally on 2026-11-14 with R 4.5.3 on Debian GNU/Linux 13.
 
 - Source build and temporary-library installation succeeded.
 - `R CMD check --no-manual`: **0 errors, 0 warnings, 0 notes**.
-- Installed-package tests: **118 passing assertions**, no failures, warnings or
+- Installed-package tests: **143 passing assertions**, no failures, warnings or
   skipped assertions.
 - All three vignettes (authentication, metadata and text/files) built, installed
   and rebuilt successfully; their examples are not evaluated and require no
   credentials.
 - Full check output is in
-  `/tmp/opencode/dspacer_check_documentation_final/dspacer.Rcheck/`.
+  `/tmp/opencode/dspacer_check_wide_metadata/dspacer.Rcheck/`.
 - The local documentation tool emitted a pre-existing libxml build/runtime
   version message; it did not produce a package-check warning or note.
+
+## Wide metadata output
+
+- `ds_get_metadata()` defaults to one row per object, with metadata fields as
+  columns. Single-valued fields are character columns; repeated fields are
+  list-columns without deduplication or string collapsing.
+- `format = "long"` retains the original per-value attributes and layout.
+- Regression tests cover column/row ordering, custom fields, repeated/missing
+  values, empty objects, provenance attributes, file/collection identities,
+  repeated bundle associations, conflicting snapshots and separate repositories.
+- The real HTTP smoke test checks both layouts, including a repeated field.
 
 ## Documentation organisation
 
@@ -24,8 +35,8 @@ Verified locally on 2026-11-14 with R 4.5.3 on Debian GNU/Linux 13.
 - Design, verification and development notes live under `dev/`, excluded from
   package builds. No `CONTRIBUTING.md` was created.
 - Checked local documentation links and parsed all vignette R examples.
-- Parsed R expressions were compared with Git HEAD: function definitions are
-  unchanged by the documentation edits.
+- During the preceding documentation-only split, parsed R expressions were
+  compared with Git HEAD and function definitions were unchanged.
 
 ## Package metadata
 

@@ -53,14 +53,31 @@ metadata <- ds_get_metadata(items)
 metadata
 ```
 
-This produces one row per metadata value, retaining field names, languages,
-authorities, confidence and ordering. Nothing is silently reduced to the first
-value. Dates remain strings, including years, uncertain dates and non-Gregorian
-dates.
+This produces one row per item, with metadata fields such as `dc.title` and
+`dc.date.issued` as columns when present. The identifying columns are
+`repository`, `object_uuid` and `object_type`.
+
+Single-valued fields are ordinary character columns. If a field has multiple
+values for any object, it becomes a list-column of character vectors. Values are
+kept in their received order, including duplicates, rather than being collapsed
+or reduced to the first value. Dates remain strings, including years, uncertain
+dates and non-Gregorian dates.
+
+For the detailed long layout, use:
+
+```{r long-metadata, eval=FALSE}
+metadata_long <- ds_get_metadata(items, format = "long")
+```
+
+This returns one row per metadata value, including language, authority,
+confidence, ordering and additional value properties. The original metadata map
+also remains available in `items$metadata`.
 
 `ds_get_metadata()` is a local transformation. It also accepts collection and
-file tables; file metadata describes the attachment, not the parent item.
-See `?ds_get_metadata` for the returned columns.
+file tables. In wide format there is one row per object; repeated bundle
+associations for a file are combined. File metadata describes the attachment,
+not the parent item. See `?ds_get_metadata` for the returned columns and missing
+value handling.
 
 ## Save a dataset
 

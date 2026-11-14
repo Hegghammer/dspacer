@@ -19,17 +19,26 @@ install_github("Hegghammer/dspacer")
 
 ## Quick start
 
+Replace the example URL below with your repository's actual REST API URL.
+For restricted content, set `DSPACE_USER` and `DSPACE_PASSWORD` in your environment
+to your **DSpace** login credentials.
+
 ```r
 library(dspacer)
 
 con <- ds_connect("https://repository.example.org/server/api")
+
+# Omit this step for anonymous access to public content.
+ds_login(
+  con,
+  user = Sys.getenv("DSPACE_USER"),
+  password = Sys.getenv("DSPACE_PASSWORD")
+)
+
 items <- ds_get_items(con)
 metadata <- ds_get_metadata(items)
 ds_disconnect(con)
 ```
-
-For restricted content, log in before retrieving items; see the authentication
-guide below.
 
 ## Documentation
 
@@ -39,4 +48,3 @@ guide below.
 
 Function help, such as `?ds_get_items` and `?ds_get_texts`, describes arguments,
 returned columns and technical behaviour.
-

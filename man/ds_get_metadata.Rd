@@ -2,27 +2,46 @@
 % Please edit documentation in R/objects.R
 \name{ds_get_metadata}
 \alias{ds_get_metadata}
-\title{Extract lossless metadata as a long table}
+\title{Extract metadata as a wide or long table}
 \usage{
-ds_get_metadata(x)
+ds_get_metadata(x, format = c("wide", "long"))
 }
 \arguments{
 \item{x}{An item, collection or file tibble returned by dspacer.}
+
+\item{format}{Output layout: \code{"wide"} (default) or \code{"long"}.}
 }
 \value{
-One row per metadata value, with \code{repository}, \code{object_uuid},
+A tibble retaining the input's \code{dspacer} attribute.
+\itemize{
+\item Wide: \code{repository}, \code{object_uuid}, \code{object_type}, followed by one column per
+observed metadata field. Objects retain their first appearance order.
+\item Long: one row per metadata value, with \code{repository}, \code{object_uuid},
 \code{object_type}, \code{field}, \code{value}, \code{language}, \code{authority}, \code{confidence},
 \code{place}, \code{value_index} (one-based received position), and \code{extra}.
 }
+}
 \description{
-This is a local transformation, not a network request. Repeated values,
-languages, authorities, confidence, server ordering and unknown properties
-are retained. Date values remain strings.
+Returns one row per object with metadata fields as columns by default.
+This is a local transformation, not a network request. Date values remain
+strings and repeated values are preserved.
 }
 \details{
-Custom fields and repeated values are not deduplicated, collapsed or reduced
-to the first value. Years, uncertain dates and non-Gregorian dates are not
-silently converted. Empty strings and missing values remain distinct.
+In wide format, metadata keys such as \code{dc.title} become column names, in
+first-seen order. A field is a character column if it has at most one value
+per object. If any object has multiple values, that field is a list-column of
+character vectors for every row. Values retain their received order, including
+duplicates; they are not collapsed into delimited strings.
+
+Missing single values are \code{NA_character_}; absent values in list-columns are
+\code{character()}. Empty strings remain empty. Objects with no metadata still have
+a row. Repeated file/bundle associations produce one row per object; conflicting
+metadata for the same object is an error.
+
+Wide format contains metadata values only. Use \code{format = "long"} for
+per-value language, authority, confidence, server ordering and unknown
+properties. The original metadata map also remains in \code{x$metadata}.
+Years, uncertain dates and non-Gregorian dates are not silently converted.
 
 Item and file metadata describe different objects. For file tables,
 \code{object_uuid} identifies the bitstream, not the parent item.

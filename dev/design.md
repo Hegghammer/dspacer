@@ -4,6 +4,11 @@ Original design draft, 2026-11-14, retained as development background.
 See [the README](../README.md), [vignettes](../vignettes/) and function help for
 current behaviour; repository-state statements below describe initial creation.
 
+Metadata layout revised on 2026-11-14: `ds_get_metadata()` now defaults to one
+row per object, with single-valued fields as character columns and repeated
+fields as list-columns. `format = "long"` preserves the detailed per-value layout.
+This supersedes the original long-table-first proposal below.
+
 Working name: `dspacer`. Name availability has not been checked.
 
 ## Purpose and scope
