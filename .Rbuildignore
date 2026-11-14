@@ -1,0 +1,8 @@
+^\.github$
+^\.gitignore$
+^LICENSE\.md$
+^DESIGN\.md$
+^CHECKS\.md$
+^tools$
+^.*\.Rcheck$
+^dspacer_.*\.tar\.gz$

@@ -1,0 +1,10 @@
+.Rhistory
+.RData
+.Ruserdata
+.Renviron
+.DS_Store
+*.Rcheck/
+*.tar.gz
+check_logs/
+__pycache__/
+*.py[cod]

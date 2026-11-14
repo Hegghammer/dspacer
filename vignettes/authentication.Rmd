@@ -1,0 +1,52 @@
+---
+title: "Authentication"
+output: rmarkdown::html_vignette
+vignette: |
+  %\VignetteIndexEntry{Authentication}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Connect
+
+Use your repository's REST API URL, not its website homepage:
+
+```{r connect, eval=FALSE}
+library(dspacer)
+
+con <- ds_connect("https://repository.example.org/server/api")
+```
+
+For public content, you can use this anonymous connection without logging in.
+
+## Log in
+
+Set `DSPACE_USER` and `DSPACE_PASSWORD` in your environment before running this
+example, for instance in a private `.Renviron` file. Keep credentials out of
+scripts and version control.
+
+```{r login, eval=FALSE}
+ds_login(
+  con,
+  user = Sys.getenv("DSPACE_USER"),
+  password = Sys.getenv("DSPACE_PASSWORD")
+)
+
+con
+```
+
+Printing `con` shows whether it is authenticated without displaying credentials.
+Use this same connection for subsequent requests.
+
+This supports DSpace username/password authentication, not browser-based SSO.
+Logging in does not grant access beyond your account's existing permissions.
+
+## Disconnect
+
+When finished, log out and clear the local session:
+
+```{r disconnect, eval=FALSE}
+ds_disconnect(con)
+```
+
+Do not save `con` with your research data: it contains sensitive session state.
